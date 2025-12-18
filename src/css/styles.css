@@ -125,6 +125,14 @@ input:focus, select:focus { border-color: rgba(124, 77, 255, 0.6); }
   background: rgba(15, 24, 40, 0.35);
 }
 
+.table-wrap--compact {
+  max-height: 220px;
+}
+
+.sim-avg h3 {
+  margin: 14px 0 10px;
+}
+
 .tabs {
   display: flex;
   gap: 8px;

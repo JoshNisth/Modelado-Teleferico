@@ -26,9 +26,7 @@ const DEFAULTS = {
   tec: 0.2,
   trl: 14,
 
-  horaInicio: 6,
   iplp: 17,
-  usarPreset: true,
   fdhPico: 1.5,
   fdhValle: 1.0,
   horasPico: [7, 12, 13, 18, 19],
@@ -65,15 +63,15 @@ function parseFormConfig(form) {
     tipoDia: String(get('tipoDia').value),
     ns: Number(get('ns').value),
 
-    cc: Number(get('cc').value),
+    // En el Teleférico de La Paz la cabina es fija: 10 pasajeros
+    cc: 10,
     tap: Number(get('tap').value),
     tec: Number(get('tec').value),
     trl: Number(get('trl').value),
 
-    horaInicio: Number(get('horaInicio').value),
     iplp: Number(get('iplp').value),
-    usarPreset: String(get('usarPreset').value) === 'si',
-    fdhPico: Number(get('fdhPico').value),
+    // FDH pico fijo = 1.5; FDH valle se calcula (se actualiza en el motor)
+    fdhPico: 1.5,
     fdhValle: Number(get('fdhValle').value),
     horasPico: parseHorasPico(String(get('horasPico').value)),
 
@@ -86,19 +84,14 @@ function validateConfig(cfg) {
   const mustBeNonNeg = (v) => mustBeFinite(v) && v >= 0;
 
   if (!Number.isInteger(cfg.ns) || cfg.ns < 1) return { ok: false, error: 'NS debe ser entero >= 1.' };
-  if (!Number.isInteger(cfg.cc) || cfg.cc < 1) return { ok: false, error: 'CC debe ser entero >= 1.' };
+  if (cfg.cc !== 10) return { ok: false, error: 'CC debe ser 10 (capacidad fija del sistema).' };
 
   if (!mustBeNonNeg(cfg.tap)) return { ok: false, error: 'TAP debe ser >= 0.' };
   if (!mustBeNonNeg(cfg.tec)) return { ok: false, error: 'TEC debe ser >= 0.' };
   if (!mustBeNonNeg(cfg.trl)) return { ok: false, error: 'TRL debe ser >= 0.' };
 
-  if (!Number.isInteger(cfg.horaInicio) || cfg.horaInicio < 0 || cfg.horaInicio > 23) {
-    return { ok: false, error: 'Hora inicio debe ser un entero entre 0 y 23.' };
-  }
-
   if (!mustBeNonNeg(cfg.iplp)) return { ok: false, error: 'IPLP base debe ser >= 0.' };
-  if (!mustBeNonNeg(cfg.fdhPico)) return { ok: false, error: 'FDH pico debe ser >= 0.' };
-  if (!mustBeNonNeg(cfg.fdhValle)) return { ok: false, error: 'FDH valle debe ser >= 0.' };
+  if (cfg.fdhPico !== 1.5) return { ok: false, error: 'FDH pico debe ser 1.5 (fijo).' };
 
   for (const h of cfg.horasPico) {
     if (!Number.isInteger(h) || h < 0 || h > 23) return { ok: false, error: 'Horas pico deben ser enteros 0..23.' };

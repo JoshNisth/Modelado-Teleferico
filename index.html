@@ -75,7 +75,7 @@
         <div class="grid">
           <label>
             Capacidad cabina (CC)
-            <input type="number" name="cc" id="cc" min="1" step="1" value="10" />
+            <input type="number" name="cc" id="cc" min="10" max="10" step="1" value="10" disabled />
           </label>
 
           <label>
@@ -90,38 +90,35 @@
 
           <label>
             Tiempo recorrido (TRL) [min]
-            <input type="number" name="trl" id="trl" min="0" step="0.1" value="14" />
+            <input type="number" name="trl" id="trl" min="0" step="0.1" value="14" disabled />
           </label>
         </div>
 
         <h3>Demanda</h3>
         <div class="grid">
           <label>
-            Hora inicio operación
-            <input type="number" name="horaInicio" id="horaInicio" min="0" max="23" step="1" value="6" />
+            Inicio operación
+            <input type="text" name="inicioOp" id="inicioOp" value="—" disabled />
+          </label>
+
+          <label>
+            Fin operación
+            <input type="text" name="finOp" id="finOp" value="—" disabled />
           </label>
 
           <label>
             IPLP base (λ base por minuto)
-            <input type="number" name="iplp" id="iplp" min="0" step="0.1" value="17" />
-          </label>
-
-          <label>
-            Usar preset por Línea+Mes
-            <select name="usarPreset" id="usarPreset">
-              <option value="no">No</option>
-              <option value="si">Sí (autocompletar IPLP)</option>
-            </select>
+            <input type="number" name="iplp" id="iplp" min="0" step="0.1" value="17" disabled />
           </label>
 
           <label>
             Factor demanda PICO (FDH)
-            <input type="number" name="fdhPico" id="fdhPico" min="0" step="0.1" value="1.5" />
+            <input type="number" name="fdhPico" id="fdhPico" min="1.5" max="1.5" step="0.1" value="1.5" disabled />
           </label>
 
           <label>
             Factor demanda VALLE (FDH)
-            <input type="number" name="fdhValle" id="fdhValle" min="0" step="0.1" value="1.0" />
+            <input type="number" name="fdhValle" id="fdhValle" min="0" step="0.001" value="1.0" disabled />
           </label>
 
           <label class="span-2">
@@ -195,6 +192,27 @@
             <tr><td class="muted" colspan="13">Ejecuta una simulación para ver datos.</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="sim-avg" aria-label="Promedios por simulación">
+        <h3>Promedios por corrida</h3>
+        <div class="table-wrap table-wrap--compact">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Sim</th>
+                <th>prom(TME)</th>
+                <th>prom(TTVL)</th>
+                <th>prom(PA)</th>
+                <th>prom(PNA)</th>
+                <th>CMO</th>
+              </tr>
+            </thead>
+            <tbody id="simAvgBody">
+              <tr><td class="muted" colspan="6">Ejecuta una simulación para ver el resumen.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="footnote">

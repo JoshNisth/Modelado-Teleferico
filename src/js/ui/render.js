@@ -13,6 +13,7 @@
   const cmoEl = document.getElementById('cmo');
   const avgPAEl = document.getElementById('avgPA');
   const avgPNAEl = document.getElementById('avgPNA');
+  const simAvgBody = document.getElementById('simAvgBody');
 
   function setStatus(text) {
     hintEl.textContent = text;
@@ -24,6 +25,52 @@
     cmoEl.textContent = `${Math.round(result.overall.cmo)} pas`;
     avgPAEl.textContent = `${fmt2(result.overall.avg.PA)} pas/min`;
     avgPNAEl.textContent = `${fmt2(result.overall.avg.PNA)} pas/min`;
+  }
+
+  function renderSimAverages(result) {
+    if (!simAvgBody) return;
+    const rows = (result.perSim || []).map((s) => {
+      return {
+        sim: s.sim,
+        tme: s.avg.TME,
+        ttvl: s.avg.TTVL,
+        pa: s.avg.PA,
+        pna: s.avg.PNA,
+        cmo: s.cmo,
+      };
+    });
+
+    if (rows.length === 0) {
+      simAvgBody.innerHTML = '<tr><td class="muted" colspan="6">Sin datos.</td></tr>';
+      return;
+    }
+
+    const html = rows
+      .map((r) => {
+        return `
+          <tr>
+            <td>${r.sim}</td>
+            <td>${fmt3(r.tme)}</td>
+            <td>${fmt3(r.ttvl)}</td>
+            <td>${fmt2(r.pa)}</td>
+            <td>${fmt2(r.pna)}</td>
+            <td>${Math.round(r.cmo)}</td>
+          </tr>`;
+      })
+      .join('');
+
+    const overall = result.overall;
+    const totalRow = `
+      <tr>
+        <td><strong>Total</strong></td>
+        <td><strong>${fmt3(overall.avg.TME)}</strong></td>
+        <td><strong>${fmt3(overall.avg.TTVL)}</strong></td>
+        <td><strong>${fmt2(overall.avg.PA)}</strong></td>
+        <td><strong>${fmt2(overall.avg.PNA)}</strong></td>
+        <td><strong>${Math.round(overall.cmo)}</strong></td>
+      </tr>`;
+
+    simAvgBody.innerHTML = html + totalRow;
   }
 
 let lastResult = null;
@@ -104,6 +151,7 @@ function renderTabs(result) {
   TF.ui.render = {
     setStatus,
     renderSummary,
+    renderSimAverages,
     renderSimulationTabs,
     renderResultsTable,
   };

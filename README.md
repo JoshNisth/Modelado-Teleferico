@@ -15,6 +15,11 @@ Simulación discreta por minuto basada en tu modelo en Python:
 Opcional (si quieres): puedes correr un servidor estático:
 - `py -m http.server 5173` y abrir `http://localhost:5173/`
 
+## Notas del modelo
+
+- `TRL` (tiempo de recorrido) es fijo por Línea.
+- `IPLP` (λ base por minuto) es fijo por Línea+Mes (datos históricos) y se aplica automáticamente.
+
 ## Estructura
 
 - `index.html`: UI

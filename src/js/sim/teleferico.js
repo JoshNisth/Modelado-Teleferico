@@ -9,13 +9,43 @@
     return peakHours.includes(hora);
   }
 
-  function minutesOfDay(tipoDia) {
-    const hours = tipoDia === 'Lunes a sábado' ? 16 : 14;
-    return hours * 60;
+  function getOperationWindow(tipoDia) {
+    // Horario real del Teleférico (según lo que indicaste):
+    // - Lunes a sábado: 06:30 a 22:30 (16h)
+    // - Domingo y feriados: 07:00 a 21:00 (14h)
+    if (tipoDia === 'Lunes a sábado') {
+      const startMin = 6 * 60 + 30;
+      const endMin = 22 * 60 + 30;
+      return { startMin, endMin, minutes: endMin - startMin };
+    }
+    const startMin = 7 * 60;
+    const endMin = 21 * 60;
+    return { startMin, endMin, minutes: endMin - startMin };
+  }
+
+  function countPeakMinutes(tipoDia, peakHours) {
+    const { startMin, minutes } = getOperationWindow(tipoDia);
+    let peakMinutes = 0;
+    for (let i = 0; i < minutes; i++) {
+      const t = startMin + i;
+      const hour = Math.floor(t / 60) % 24;
+      if (isPeakHour(hour, peakHours)) peakMinutes++;
+    }
+    return peakMinutes;
+  }
+
+  function computeFdhValle(tipoDia, peakHours, fdhPico) {
+    const { minutes } = getOperationWindow(tipoDia);
+    const picoMin = countPeakMinutes(tipoDia, peakHours);
+    const valleMin = minutes - picoMin;
+    if (valleMin <= 0) return null;
+    // Normalización: (pico*fdhPico + valle*fdhValle) / MOD = 1
+    const fdhValle = (minutes - picoMin * fdhPico) / valleMin;
+    return Number.isFinite(fdhValle) ? fdhValle : null;
   }
 
   function simulateDay(config, rng) {
-    const MOD = minutesOfDay(config.tipoDia);
+    const { startMin, minutes: MOD } = getOperationWindow(config.tipoDia);
 
   let NPC = 0.0;
   let CMO = 0.0;
@@ -27,9 +57,10 @@
 
   const rows = [];
 
-    for (let CM = 1; CM <= MOD; CM++) {
-    const horaReloj = config.horaInicio + Math.floor((CM - 1) / 60);
-    const minutoReloj = (CM - 1) % 60;
+    for (let CM = 0; CM < MOD; CM++) {
+    const t = startMin + CM;
+    const horaReloj = Math.floor(t / 60) % 24;
+    const minutoReloj = t % 60;
 
     const peak = isPeakHour(horaReloj, config.horasPico);
     const FH = peak ? 'PICO' : 'VALLE';
@@ -107,7 +138,19 @@
       throw new Error('makeRng no disponible (orden de scripts incorrecto).');
     }
 
-    const rng = makeRng(config.seed);
+    const derivedValle = computeFdhValle(config.tipoDia, config.horasPico, config.fdhPico);
+    if (derivedValle == null || derivedValle < 0) {
+      throw new Error('FDH_valle inválido: revisa horas pico y la normalización.');
+    }
+
+    const normalizedConfig = {
+      ...config,
+      cc: 10,
+      fdhPico: 1.5,
+      fdhValle: derivedValle,
+    };
+
+    const rng = makeRng(normalizedConfig.seed);
 
   const perSim = [];
   let sumAvgTME = 0;
@@ -116,8 +159,8 @@
   let sumAvgPNA = 0;
   let globalCMO = 0;
 
-    for (let s = 1; s <= config.ns; s++) {
-      const day = simulateDay(config, rng);
+    for (let s = 1; s <= normalizedConfig.ns; s++) {
+      const day = simulateDay(normalizedConfig, rng);
     perSim.push({ sim: s, ...day });
 
     sumAvgTME += day.avg.TME;
@@ -128,7 +171,7 @@
   }
 
     return {
-      config,
+      config: normalizedConfig,
       minutesPerDay: perSim[0]?.minutesPerDay ?? 0,
       perSim,
       overall: {
@@ -143,5 +186,5 @@
     };
   }
 
-  TF.sim.engine = { simulateDay, runSimulations };
+  TF.sim.engine = { getOperationWindow, computeFdhValle, simulateDay, runSimulations };
 })();
