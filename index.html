@@ -170,6 +170,7 @@
       </div>
 
       <div class="table-wrap">
+        <div class="tabs" id="simTabs" aria-label="Corridas" hidden></div>
         <table class="table" id="resultsTable">
           <thead>
             <tr>
@@ -204,6 +205,14 @@
     <small>Hecho para modelado/simulación — Teleférico Bolivia (tema académico).</small>
   </footer>
 
-  <script type="module" src="./src/js/main.js"></script>
+  <!-- Scripts en orden (sin ES modules) para que funcione con file:// -->
+  <script src="./src/js/utils/format.js"></script>
+  <script src="./src/js/utils/rng.js"></script>
+  <script src="./src/js/sim/poisson.js"></script>
+  <script src="./src/js/sim/scenarios.js"></script>
+  <script src="./src/js/sim/config.js"></script>
+  <script src="./src/js/sim/teleferico.js"></script>
+  <script src="./src/js/ui/render.js"></script>
+  <script src="./src/js/main.js"></script>
 </body>
 </html>

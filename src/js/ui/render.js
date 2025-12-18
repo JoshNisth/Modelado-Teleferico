@@ -1,30 +1,74 @@
-import { fmt2, fmt3, pad2 } from '../utils/format.js';
+(() => {
+  const TF = (window.TF = window.TF || {});
+  TF.ui = TF.ui || {};
 
-const hintEl = document.getElementById('hint');
-const tbody = document.getElementById('resultsBody');
+  const { fmt2, fmt3, pad2 } = TF.utils.format;
 
-const avgTMEEl = document.getElementById('avgTME');
-const avgTTVLEl = document.getElementById('avgTTVL');
-const cmoEl = document.getElementById('cmo');
-const avgPAEl = document.getElementById('avgPA');
-const avgPNAEl = document.getElementById('avgPNA');
+  const hintEl = document.getElementById('hint');
+  const tbody = document.getElementById('resultsBody');
+  const tabsEl = document.getElementById('simTabs');
 
-export function setStatus(text) {
-  hintEl.textContent = text;
+  const avgTMEEl = document.getElementById('avgTME');
+  const avgTTVLEl = document.getElementById('avgTTVL');
+  const cmoEl = document.getElementById('cmo');
+  const avgPAEl = document.getElementById('avgPA');
+  const avgPNAEl = document.getElementById('avgPNA');
+
+  function setStatus(text) {
+    hintEl.textContent = text;
+  }
+
+  function renderSummary(result) {
+    avgTMEEl.textContent = `${fmt3(result.overall.avg.TME)} min`;
+    avgTTVLEl.textContent = `${fmt3(result.overall.avg.TTVL)} min`;
+    cmoEl.textContent = `${Math.round(result.overall.cmo)} pas`;
+    avgPAEl.textContent = `${fmt2(result.overall.avg.PA)} pas/min`;
+    avgPNAEl.textContent = `${fmt2(result.overall.avg.PNA)} pas/min`;
+  }
+
+let lastResult = null;
+let activeSim = 1;
+
+function renderTabs(result) {
+  if (!tabsEl) return;
+
+  const ns = result.perSim?.length ?? 0;
+  if (ns <= 1) {
+    tabsEl.hidden = true;
+    tabsEl.innerHTML = '';
+    return;
+  }
+
+  tabsEl.hidden = false;
+  tabsEl.innerHTML = result.perSim
+    .map((s) => {
+      const selected = s.sim === activeSim;
+      return `<button type="button" class="tab" data-sim="${s.sim}" aria-selected="${selected}">Sim ${s.sim}</button>`;
+    })
+    .join('');
+
+  for (const btn of tabsEl.querySelectorAll('button[data-sim]')) {
+    btn.addEventListener('click', () => {
+      const sim = Number(btn.getAttribute('data-sim'));
+      if (!Number.isFinite(sim)) return;
+      activeSim = sim;
+      renderTabs(lastResult);
+      renderResultsTable(lastResult, activeSim);
+    });
+  }
 }
 
-export function renderSummary(result) {
-  avgTMEEl.textContent = `${fmt3(result.overall.avg.TME)} min`;
-  avgTTVLEl.textContent = `${fmt3(result.overall.avg.TTVL)} min`;
-  cmoEl.textContent = `${Math.round(result.overall.cmo)} pas`;
-  avgPAEl.textContent = `${fmt2(result.overall.avg.PA)} pas/min`;
-  avgPNAEl.textContent = `${fmt2(result.overall.avg.PNA)} pas/min`;
-}
+  function renderSimulationTabs(result) {
+    lastResult = result;
+    activeSim = 1;
+    renderTabs(result);
+  }
 
-export function renderResultsTable(result) {
-  const rows = [];
+  function renderResultsTable(result, simFilter = null) {
+    const rows = [];
 
   for (const sim of result.perSim) {
+    if (simFilter != null && sim.sim !== simFilter) continue;
     for (const r of sim.rows) {
       rows.push({ sim: sim.sim, ...r });
     }
@@ -54,5 +98,13 @@ export function renderResultsTable(result) {
       </tr>`;
   }).join('');
 
-  tbody.innerHTML = html;
-}
+    tbody.innerHTML = html;
+  }
+
+  TF.ui.render = {
+    setStatus,
+    renderSummary,
+    renderSimulationTabs,
+    renderResultsTable,
+  };
+})();

@@ -1,17 +1,21 @@
-import { poissonInverse } from './poisson.js';
-import { makeRng } from '../utils/rng.js';
+(() => {
+  const TF = (window.TF = window.TF || {});
+  TF.sim = TF.sim || {};
 
-function isPeakHour(hora, peakHours) {
-  return peakHours.includes(hora);
-}
+  const poissonInverse = TF.sim?.poisson?.poissonInverse;
+  const makeRng = TF.utils?.rng?.makeRng;
 
-function minutesOfDay(tipoDia) {
-  const hours = tipoDia === 'Lunes a sábado' ? 16 : 14;
-  return hours * 60;
-}
+  function isPeakHour(hora, peakHours) {
+    return peakHours.includes(hora);
+  }
 
-export function simulateDay(config, rng) {
-  const MOD = minutesOfDay(config.tipoDia);
+  function minutesOfDay(tipoDia) {
+    const hours = tipoDia === 'Lunes a sábado' ? 16 : 14;
+    return hours * 60;
+  }
+
+  function simulateDay(config, rng) {
+    const MOD = minutesOfDay(config.tipoDia);
 
   let NPC = 0.0;
   let CMO = 0.0;
@@ -23,7 +27,7 @@ export function simulateDay(config, rng) {
 
   const rows = [];
 
-  for (let CM = 1; CM <= MOD; CM++) {
+    for (let CM = 1; CM <= MOD; CM++) {
     const horaReloj = config.horaInicio + Math.floor((CM - 1) / 60);
     const minutoReloj = (CM - 1) % 60;
 
@@ -87,16 +91,23 @@ export function simulateDay(config, rng) {
     PNA: sumPNA / MOD,
   };
 
-  return {
-    minutesPerDay: MOD,
-    rows,
-    avg,
-    cmo: CMO,
-  };
-}
+    return {
+      minutesPerDay: MOD,
+      rows,
+      avg,
+      cmo: CMO,
+    };
+  }
 
-export function runSimulations(config) {
-  const rng = makeRng(config.seed);
+  function runSimulations(config) {
+    if (typeof poissonInverse !== 'function') {
+      throw new Error('poissonInverse no disponible (orden de scripts incorrecto).');
+    }
+    if (typeof makeRng !== 'function') {
+      throw new Error('makeRng no disponible (orden de scripts incorrecto).');
+    }
+
+    const rng = makeRng(config.seed);
 
   const perSim = [];
   let sumAvgTME = 0;
@@ -105,8 +116,8 @@ export function runSimulations(config) {
   let sumAvgPNA = 0;
   let globalCMO = 0;
 
-  for (let s = 1; s <= config.ns; s++) {
-    const day = simulateDay(config, rng);
+    for (let s = 1; s <= config.ns; s++) {
+      const day = simulateDay(config, rng);
     perSim.push({ sim: s, ...day });
 
     sumAvgTME += day.avg.TME;
@@ -116,18 +127,21 @@ export function runSimulations(config) {
     globalCMO = Math.max(globalCMO, day.cmo);
   }
 
-  return {
-    config,
-    minutesPerDay: perSim[0]?.minutesPerDay ?? 0,
-    perSim,
-    overall: {
-      avg: {
-        TME: sumAvgTME / config.ns,
-        TTVL: sumAvgTTVL / config.ns,
-        PA: sumAvgPA / config.ns,
-        PNA: sumAvgPNA / config.ns,
+    return {
+      config,
+      minutesPerDay: perSim[0]?.minutesPerDay ?? 0,
+      perSim,
+      overall: {
+        avg: {
+          TME: sumAvgTME / config.ns,
+          TTVL: sumAvgTTVL / config.ns,
+          PA: sumAvgPA / config.ns,
+          PNA: sumAvgPNA / config.ns,
+        },
+        cmo: globalCMO,
       },
-      cmo: globalCMO,
-    },
-  };
-}
+    };
+  }
+
+  TF.sim.engine = { simulateDay, runSimulations };
+})();

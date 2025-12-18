@@ -1,11 +1,27 @@
-import { DEFAULTS, applyThemeForLine, parseFormConfig, validateConfig } from './sim/config.js';
-import { runSimulations } from './sim/teleferico.js';
-import { renderResultsTable, renderSummary, setStatus } from './ui/render.js';
-import { getIplpPreset } from './sim/scenarios.js';
+const TF = window.TF;
+
+const { DEFAULTS, applyThemeForLine, parseFormConfig, validateConfig } = TF.sim.config;
+const { runSimulations } = TF.sim.engine;
+const { renderResultsTable, renderSummary, renderSimulationTabs, setStatus } = TF.ui.render;
+const { getIplpPreset } = TF.sim.scenarios;
 
 const form = document.getElementById('configForm');
 const resetBtn = document.getElementById('resetBtn');
 const errorEl = document.getElementById('error');
+
+function showError(message) {
+  errorEl.textContent = message;
+}
+
+window.addEventListener('error', (evt) => {
+  const msg = evt?.error?.message || evt?.message || 'Error inesperado.';
+  showError(msg);
+});
+
+window.addEventListener('unhandledrejection', (evt) => {
+  const msg = evt?.reason?.message || String(evt?.reason || 'Promesa rechazada sin manejar.');
+  showError(msg);
+});
 
 function setFormValues(defaults) {
   document.getElementById('linea').value = defaults.linea;
@@ -30,6 +46,10 @@ function setFormValues(defaults) {
 }
 
 setFormValues(DEFAULTS);
+
+if (window.location.protocol === 'file:') {
+  setStatus('Abierto como archivo local (file://). Esta versión debería funcionar sin servidor.');
+}
 
 function maybeApplyPresetIplp() {
   const usar = document.getElementById('usarPreset').value === 'si';
@@ -60,20 +80,27 @@ form.addEventListener('change', (e) => {
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
-  errorEl.textContent = '';
+  showError('');
 
-  const config = parseFormConfig(form);
-  const validation = validateConfig(config);
-  if (!validation.ok) {
-    errorEl.textContent = validation.error;
-    return;
+  try {
+    const config = parseFormConfig(form);
+    const validation = validateConfig(config);
+    if (!validation.ok) {
+      showError(validation.error);
+      return;
+    }
+
+    setStatus('Simulando…');
+    const result = runSimulations(config);
+    renderSummary(result);
+    renderSimulationTabs(result);
+    renderResultsTable(result, 1);
+    setStatus(`Listo. Minutos simulados por corrida: ${result.minutesPerDay}.`);
+  } catch (err) {
+    console.error(err);
+    showError(err?.message ? String(err.message) : String(err));
+    setStatus('Error al simular.');
   }
-
-  setStatus('Simulando…');
-  const result = runSimulations(config);
-  renderSummary(result);
-  renderResultsTable(result);
-  setStatus(`Listo. Minutos simulados por corrida: ${result.minutesPerDay}.`);
 });
 
 resetBtn.addEventListener('click', () => {

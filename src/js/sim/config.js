@@ -1,3 +1,7 @@
+(() => {
+const TF = (window.TF = window.TF || {});
+TF.sim = TF.sim || {};
+
 const LINE_COLORS = {
   'Morada': '#7c4dff',
   'Roja': '#ff3b30',
@@ -9,7 +13,7 @@ const LINE_COLORS = {
   'Blanca': '#e7eefc',
 };
 
-export const DEFAULTS = {
+const DEFAULTS = {
   linea: 'Morada',
   mes: 'Diciembre',
   tipoDia: 'Lunes a sábado',
@@ -30,7 +34,7 @@ export const DEFAULTS = {
   seed: '',
 };
 
-export function applyThemeForLine(linea) {
+function applyThemeForLine(linea) {
   const color = LINE_COLORS[linea] ?? LINE_COLORS['Morada'];
   document.documentElement.style.setProperty('--accent', color);
 }
@@ -50,7 +54,7 @@ function parseHorasPico(text) {
   return hours;
 }
 
-export function parseFormConfig(form) {
+function parseFormConfig(form) {
   const get = (id) => form.querySelector(`#${id}`);
 
   return {
@@ -75,7 +79,7 @@ export function parseFormConfig(form) {
   };
 }
 
-export function validateConfig(cfg) {
+function validateConfig(cfg) {
   const mustBeFinite = (v) => Number.isFinite(v);
   const mustBeNonNeg = (v) => mustBeFinite(v) && v >= 0;
 
@@ -100,3 +104,11 @@ export function validateConfig(cfg) {
 
   return { ok: true };
 }
+
+TF.sim.config = {
+  DEFAULTS,
+  applyThemeForLine,
+  parseFormConfig,
+  validateConfig,
+};
+})();

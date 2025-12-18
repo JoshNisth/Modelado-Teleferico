@@ -1,17 +1,24 @@
 // Poisson por método inverso (mismo espíritu que tu Python)
-export function poissonInverse(lambda, u) {
-  if (!(lambda > 0)) return 0;
+(() => {
+  const TF = (window.TF = window.TF || {});
+  TF.sim = TF.sim || {};
 
-  let p = Math.exp(-lambda);
-  let cdf = p;
-  let x = 0;
+  function poissonInverse(lambda, u) {
+    if (!(lambda > 0)) return 0;
 
-  while (u > cdf) {
-    x += 1;
-    p = (p * lambda) / x;
-    cdf += p;
-    if (x > 10000) break;
+    let p = Math.exp(-lambda);
+    let cdf = p;
+    let x = 0;
+
+    while (u > cdf) {
+      x += 1;
+      p = (p * lambda) / x;
+      cdf += p;
+      if (x > 10000) break;
+    }
+
+    return x;
   }
 
-  return x;
-}
+  TF.sim.poisson = { poissonInverse };
+})();

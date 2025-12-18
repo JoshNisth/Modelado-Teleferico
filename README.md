@@ -8,9 +8,12 @@ Simulación discreta por minuto basada en tu modelo en Python:
 
 ## Cómo usar
 
-1. Abre `index.html` (doble clic) o con un servidor estático.
+1. Abre `index.html` (doble clic) y debería correr.
 2. Ajusta parámetros.
 3. Click en **Simular**.
+
+Opcional (si quieres): puedes correr un servidor estático:
+- `py -m http.server 5173` y abrir `http://localhost:5173/`
 
 ## Estructura
 
