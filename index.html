@@ -175,6 +175,14 @@
           <div class="summary__label">Promedio PNA</div>
           <div class="summary__value" id="avgPNA">—</div>
         </div>
+        <div class="summary__card">
+          <div class="summary__label">Promedio PNPCP</div>
+          <div class="summary__value" id="avgPNPCP">—</div>
+        </div>
+        <div class="summary__card">
+          <div class="summary__label">Promedio PNPCV</div>
+          <div class="summary__value" id="avgPNPCV">—</div>
+        </div>
       </div>
 
       <div class="table-wrap">
@@ -190,15 +198,16 @@
               <th>λ</th>
               <th>TLP</th>
               <th>PA</th>
-              <th>NPC(t+1)</th>
               <th>PNA</th>
               <th>TME</th>
               <th>TTVL</th>
               <th>CMO</th>
+              <th>ANPCP</th>
+              <th>ANPCV</th>
             </tr>
           </thead>
           <tbody id="resultsBody">
-            <tr><td class="muted" colspan="13">Ejecuta una simulación para ver datos.</td></tr>
+            <tr><td class="muted" colspan="14">Ejecuta una simulación para ver datos.</td></tr>
           </tbody>
         </table>
       </div>
@@ -215,10 +224,12 @@
                 <th>prom(PA)</th>
                 <th>prom(PNA)</th>
                 <th>CMO</th>
+                <th>PNPCP</th>
+                <th>PNPCV</th>
               </tr>
             </thead>
             <tbody id="simAvgBody">
-              <tr><td class="muted" colspan="6">Ejecuta una simulación para ver el resumen.</td></tr>
+              <tr><td class="muted" colspan="8">Ejecuta una simulación para ver el resumen.</td></tr>
             </tbody>
           </table>
         </div>

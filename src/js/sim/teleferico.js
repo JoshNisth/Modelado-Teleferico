@@ -46,6 +46,8 @@
 
   function simulateDay(config, rng) {
     const { startMin, minutes: MOD } = getOperationWindow(config.tipoDia);
+    const picoMin = countPeakMinutes(config.tipoDia, config.horasPico);
+    const valleMin = MOD - picoMin;
 
   let NPC = 0.0;
   let CMO = 0.0;
@@ -54,6 +56,8 @@
   let sumTTVL = 0.0;
   let sumPA = 0.0;
   let sumPNA = 0.0;
+  let sumANPCP = 0.0;
+  let sumANPCV = 0.0;
 
   const rows = [];
 
@@ -91,6 +95,14 @@
     const TME = (NPC_t > 0 && PA > 0) ? (NPC_t / PA) : 0.0;
     const TTVL = TME + config.trl;
 
+    if (NPC_t > 0 && PA > 0) {
+      if (peak) {
+        sumANPCP += PNA;
+      } else {
+        sumANPCV += PNA;
+      }
+    }
+
     NPC = NPC_next;
     CMO = Math.max(CMO, NPC);
 
@@ -112,6 +124,8 @@
       TME,
       TTVL,
       CMO,
+      ANPCP: sumANPCP,
+      ANPCV: sumANPCV,
     });
   }
 
@@ -120,10 +134,14 @@
     TTVL: sumTTVL / MOD,
     PA: sumPA / MOD,
     PNA: sumPNA / MOD,
+    PNPCP: picoMin > 0 ? sumANPCP / picoMin : 0,
+    PNPCV: valleMin > 0 ? sumANPCV / valleMin : 0,
   };
 
     return {
       minutesPerDay: MOD,
+      picoMin,
+      valleMin,
       rows,
       avg,
       cmo: CMO,
@@ -157,6 +175,8 @@
   let sumAvgTTVL = 0;
   let sumAvgPA = 0;
   let sumAvgPNA = 0;
+  let sumAvgPNPCP = 0;
+  let sumAvgPNPCV = 0;
   let globalCMO = 0;
 
     for (let s = 1; s <= normalizedConfig.ns; s++) {
@@ -167,6 +187,8 @@
     sumAvgTTVL += day.avg.TTVL;
     sumAvgPA += day.avg.PA;
     sumAvgPNA += day.avg.PNA;
+    sumAvgPNPCP += day.avg.PNPCP;
+    sumAvgPNPCV += day.avg.PNPCV;
     globalCMO = Math.max(globalCMO, day.cmo);
   }
 
@@ -180,6 +202,8 @@
           TTVL: sumAvgTTVL / config.ns,
           PA: sumAvgPA / config.ns,
           PNA: sumAvgPNA / config.ns,
+          PNPCP: sumAvgPNPCP / config.ns,
+          PNPCV: sumAvgPNPCV / config.ns,
         },
         cmo: globalCMO,
       },

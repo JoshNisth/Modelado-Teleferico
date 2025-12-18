@@ -13,6 +13,8 @@
   const cmoEl = document.getElementById('cmo');
   const avgPAEl = document.getElementById('avgPA');
   const avgPNAEl = document.getElementById('avgPNA');
+  const avgPNPCPEl = document.getElementById('avgPNPCP');
+  const avgPNPCVEl = document.getElementById('avgPNPCV');
   const simAvgBody = document.getElementById('simAvgBody');
 
   let activeRangeMode = 'todo';
@@ -70,7 +72,7 @@
     const perSimStats = (result.perSim || []).map((sim) => {
       const filteredRows = (sim.rows || []).filter((r) => includeRowByRange(r, mode));
       const stats = computeStatsFromRows(filteredRows);
-      return { sim: sim.sim, ...stats };
+      return { sim: sim.sim, ...stats, pnpcp: sim.avg.PNPCP, pnpcv: sim.avg.PNPCV };
     });
 
     const totalCount = perSimStats.reduce((acc, s) => acc + (s.count || 0), 0);
@@ -86,6 +88,8 @@
     let sumAvgTTVL = 0;
     let sumAvgPA = 0;
     let sumAvgPNA = 0;
+    let sumAvgPNPCP = 0;
+    let sumAvgPNPCV = 0;
     let overallCMO = 0;
     let simsWithData = 0;
 
@@ -96,6 +100,8 @@
       sumAvgTTVL += s.avg.TTVL;
       sumAvgPA += s.avg.PA;
       sumAvgPNA += s.avg.PNA;
+      sumAvgPNPCP += s.pnpcp;
+      sumAvgPNPCV += s.pnpcv;
       if (s.cmo != null) overallCMO = Math.max(overallCMO, s.cmo);
     }
 
@@ -108,6 +114,8 @@
           TTVL: sumAvgTTVL / denom,
           PA: sumAvgPA / denom,
           PNA: sumAvgPNA / denom,
+          PNPCP: sumAvgPNPCP / denom,
+          PNPCV: sumAvgPNPCV / denom,
         },
         cmo: overallCMO,
       },
@@ -127,6 +135,8 @@
       cmoEl.textContent = '—';
       avgPAEl.textContent = '—';
       avgPNAEl.textContent = '—';
+      avgPNPCPEl.textContent = '—';
+      avgPNPCVEl.textContent = '—';
       return;
     }
 
@@ -135,6 +145,8 @@
     cmoEl.textContent = `${Math.round(filtered.overall.cmo)} pas`;
     avgPAEl.textContent = `${fmt2(filtered.overall.avg.PA)} pas/min`;
     avgPNAEl.textContent = `${fmt2(filtered.overall.avg.PNA)} pas/min`;
+    avgPNPCPEl.textContent = `${fmt2(filtered.overall.avg.PNPCP)} pas/min`;
+    avgPNPCVEl.textContent = `${fmt2(filtered.overall.avg.PNPCV)} pas/min`;
   }
 
   function renderSimAverages(result, rangeMode = activeRangeMode) {
@@ -148,12 +160,14 @@
         pa: s.avg.PA,
         pna: s.avg.PNA,
         cmo: s.cmo,
+        pnpcp: s.pnpcp,
+        pnpcv: s.pnpcv,
         count: s.count,
       };
     });
 
     if (rows.length === 0) {
-      simAvgBody.innerHTML = '<tr><td class="muted" colspan="6">Sin datos.</td></tr>';
+      simAvgBody.innerHTML = '<tr><td class="muted" colspan="8">Sin datos.</td></tr>';
       return;
     }
 
@@ -168,6 +182,8 @@
             <td>${empty ? '—' : fmt2(r.pa)}</td>
             <td>${empty ? '—' : fmt2(r.pna)}</td>
             <td>${empty ? '—' : Math.round(r.cmo)}</td>
+            <td>${empty ? '—' : fmt2(r.pnpcp)}</td>
+            <td>${empty ? '—' : fmt2(r.pnpcv)}</td>
           </tr>`;
       })
       .join('');
@@ -181,6 +197,8 @@
         <td><strong>${filtered.totalCount ? fmt2(overall.avg.PA) : '—'}</strong></td>
         <td><strong>${filtered.totalCount ? fmt2(overall.avg.PNA) : '—'}</strong></td>
         <td><strong>${filtered.totalCount ? Math.round(overall.cmo) : '—'}</strong></td>
+        <td><strong>${filtered.totalCount ? fmt2(overall.avg.PNPCP) : '—'}</strong></td>
+        <td><strong>${filtered.totalCount ? fmt2(overall.avg.PNPCV) : '—'}</strong></td>
       </tr>`;
 
     simAvgBody.innerHTML = html + totalRow;
@@ -237,7 +255,7 @@ function renderTabs(result) {
     }
 
   if (rows.length === 0) {
-    tbody.innerHTML = '<tr><td class="muted" colspan="13">Sin datos.</td></tr>';
+    tbody.innerHTML = '<tr><td class="muted" colspan="14">Sin datos.</td></tr>';
     return;
   }
 
@@ -252,11 +270,12 @@ function renderTabs(result) {
         <td>${fmt2(r.lambda)}</td>
         <td>${r.TLP}</td>
         <td>${Math.round(r.PA)}</td>
-        <td>${Math.round(r.NPC_next)}</td>
         <td>${Math.round(r.PNA)}</td>
         <td>${fmt2(r.TME)}</td>
         <td>${fmt2(r.TTVL)}</td>
         <td>${Math.round(r.CMO)}</td>
+        <td>${Math.round(r.ANPCP)}</td>
+        <td>${Math.round(r.ANPCV)}</td>
       </tr>`;
   }).join('');
 
