@@ -3,7 +3,7 @@ const TF = window.TF;
 const { DEFAULTS, applyThemeForLine, parseFormConfig, validateConfig } = TF.sim.config;
 const { runSimulations } = TF.sim.engine;
 const { renderResultsTable, renderSummary, renderSimulationTabs, setStatus } = TF.ui.render;
-const { getIplpPreset } = TF.sim.scenarios;
+const { getPreset } = TF.sim.scenarios;
 
 const form = document.getElementById('configForm');
 const resetBtn = document.getElementById('resetBtn');
@@ -47,34 +47,61 @@ function setFormValues(defaults) {
 
 setFormValues(DEFAULTS);
 
+function setPresetLock(locked) {
+  const iplpEl = document.getElementById('iplp');
+  const trlEl = document.getElementById('trl');
+  if (iplpEl) iplpEl.disabled = Boolean(locked);
+  if (trlEl) trlEl.disabled = Boolean(locked);
+}
+
 if (window.location.protocol === 'file:') {
   setStatus('Abierto como archivo local (file://). Esta versión debería funcionar sin servidor.');
 }
 
-function maybeApplyPresetIplp() {
+function maybeApplyPresetParams() {
   const usar = document.getElementById('usarPreset').value === 'si';
-  if (!usar) return;
-  const linea = document.getElementById('linea').value;
-  const mes = document.getElementById('mes').value;
-  const preset = getIplpPreset(linea, mes);
-  if (preset == null) {
-    setStatus('Preset no encontrado para Línea+Mes. (Puedes editar src/js/sim/scenarios.js)');
+  if (!usar) {
+    setPresetLock(false);
     return;
   }
-  document.getElementById('iplp').value = String(preset);
-  setStatus(`Preset aplicado: IPLP=${preset} para ${linea}-${mes}.`);
+  const linea = document.getElementById('linea').value;
+  const mes = document.getElementById('mes').value;
+  const preset = getPreset(linea, mes);
+  if (preset == null) {
+    setStatus('Preset no encontrado para esa Línea/Mes. (Edita src/js/sim/scenarios.js)');
+    setPresetLock(false);
+    return;
+  }
+
+  if (preset.iplp != null) {
+    document.getElementById('iplp').value = String(preset.iplp);
+  }
+  if (preset.trl != null) {
+    document.getElementById('trl').value = String(preset.trl);
+  }
+
+  // Si hay preset, bloquea para que se note que viene del escenario
+  setPresetLock(true);
+
+  const parts = [];
+  if (preset.iplp != null) parts.push(`IPLP=${preset.iplp} pas/min`);
+  if (preset.trl != null) parts.push(`TRL=${preset.trl} min`);
+  setStatus(`Preset aplicado (${linea}-${mes}): ${parts.join(' · ')}`);
 }
+
+// Aplica preset una vez al cargar
+maybeApplyPresetParams();
 
 form.addEventListener('change', (e) => {
   if (e.target?.id === 'linea') {
     applyThemeForLine(e.target.value);
-    maybeApplyPresetIplp();
+    maybeApplyPresetParams();
   }
   if (e.target?.id === 'mes') {
-    maybeApplyPresetIplp();
+    maybeApplyPresetParams();
   }
   if (e.target?.id === 'usarPreset') {
-    maybeApplyPresetIplp();
+    maybeApplyPresetParams();
   }
 });
 

@@ -11,6 +11,8 @@ const LINE_COLORS = {
   'Café': '#a2845e',
   'Naranja': '#ff9f0a',
   'Blanca': '#e7eefc',
+  'Celeste': '#5ac8fa',
+  'Plateada': '#8e8e93',
 };
 
 const DEFAULTS = {
@@ -26,7 +28,7 @@ const DEFAULTS = {
 
   horaInicio: 6,
   iplp: 17,
-  usarPreset: false,
+  usarPreset: true,
   fdhPico: 1.5,
   fdhValle: 1.0,
   horasPico: [7, 12, 13, 18, 19],
