@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simulador Teleférico Bolivia</title>
+  <link rel="stylesheet" href="./src/css/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand__mark" aria-hidden="true"></div>
+      <div class="brand__text">
+        <h1>Simulador — Teleférico de Bolivia</h1>
+        <p>Modelo discreto por minuto: arribos Poisson, cola y atención por cabinas.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Parámetros</h2>
+
+      <form id="configForm" class="form" autocomplete="off">
+        <div class="grid">
+          <label>
+            Línea / Tema
+            <select name="linea" id="linea">
+              <option value="Morada">Morada</option>
+              <option value="Roja">Roja</option>
+              <option value="Amarilla">Amarilla</option>
+              <option value="Azul">Azul</option>
+              <option value="Verde">Verde</option>
+              <option value="Café">Café</option>
+              <option value="Naranja">Naranja</option>
+              <option value="Blanca">Blanca</option>
+            </select>
+          </label>
+
+          <label>
+            Mes
+            <select name="mes" id="mes">
+              <option value="Diciembre">Diciembre</option>
+              <option value="Noviembre">Noviembre</option>
+              <option value="Octubre">Octubre</option>
+              <option value="Septiembre">Septiembre</option>
+              <option value="Agosto">Agosto</option>
+              <option value="Julio">Julio</option>
+              <option value="Junio">Junio</option>
+              <option value="Mayo">Mayo</option>
+              <option value="Abril">Abril</option>
+              <option value="Marzo">Marzo</option>
+              <option value="Febrero">Febrero</option>
+              <option value="Enero">Enero</option>
+            </select>
+          </label>
+
+          <label>
+            Tipo de día
+            <select name="tipoDia" id="tipoDia">
+              <option value="Lunes a sábado">Lunes a sábado (16h)</option>
+              <option value="Domingo y feriados">Domingo y feriados (14h)</option>
+            </select>
+          </label>
+
+          <label>
+            Corridas (NS)
+            <input type="number" name="ns" id="ns" min="1" step="1" value="1" />
+          </label>
+        </div>
+
+        <h3>Capacidad y tiempos</h3>
+        <div class="grid">
+          <label>
+            Capacidad cabina (CC)
+            <input type="number" name="cc" id="cc" min="1" step="1" value="10" />
+          </label>
+
+          <label>
+            Abordaje por pasajero (TAP) [min/pas]
+            <input type="number" name="tap" id="tap" min="0" step="0.001" value="0.034" />
+          </label>
+
+          <label>
+            Tiempo entre cabinas (TEC) [min/cab]
+            <input type="number" name="tec" id="tec" min="0" step="0.001" value="0.2" />
+          </label>
+
+          <label>
+            Tiempo recorrido (TRL) [min]
+            <input type="number" name="trl" id="trl" min="0" step="0.1" value="14" />
+          </label>
+        </div>
+
+        <h3>Demanda</h3>
+        <div class="grid">
+          <label>
+            Hora inicio operación
+            <input type="number" name="horaInicio" id="horaInicio" min="0" max="23" step="1" value="6" />
+          </label>
+
+          <label>
+            IPLP base (λ base por hora)
+            <input type="number" name="iplp" id="iplp" min="0" step="0.1" value="17" />
+          </label>
+
+          <label>
+            Usar preset por Línea+Mes
+            <select name="usarPreset" id="usarPreset">
+              <option value="no">No</option>
+              <option value="si">Sí (autocompletar IPLP)</option>
+            </select>
+          </label>
+
+          <label>
+            Factor demanda PICO (FDH)
+            <input type="number" name="fdhPico" id="fdhPico" min="0" step="0.1" value="1.5" />
+          </label>
+
+          <label>
+            Factor demanda VALLE (FDH)
+            <input type="number" name="fdhValle" id="fdhValle" min="0" step="0.1" value="1.0" />
+          </label>
+
+          <label class="span-2">
+            Horas pico (separadas por coma)
+            <input type="text" name="horasPico" id="horasPico" value="7,12,13,18,19" placeholder="Ej: 7,12,13,18,19" />
+          </label>
+
+          <label class="span-2">
+            Semilla RNG (opcional, para reproducibilidad)
+            <input type="text" name="seed" id="seed" placeholder="Ej: 20251217" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn btn--primary">Simular</button>
+          <button type="button" id="resetBtn" class="btn">Reset</button>
+        </div>
+
+        <p class="hint" id="hint"></p>
+        <p class="error" id="error" role="alert" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="panel panel--results">
+      <h2>Resultados</h2>
+
+      <div class="summary" id="summary">
+        <div class="summary__card">
+          <div class="summary__label">Promedio TME</div>
+          <div class="summary__value" id="avgTME">—</div>
+        </div>
+        <div class="summary__card">
+          <div class="summary__label">Promedio TTVL</div>
+          <div class="summary__value" id="avgTTVL">—</div>
+        </div>
+        <div class="summary__card">
+          <div class="summary__label">CMO (máx cola)</div>
+          <div class="summary__value" id="cmo">—</div>
+        </div>
+        <div class="summary__card">
+          <div class="summary__label">Promedio PA</div>
+          <div class="summary__value" id="avgPA">—</div>
+        </div>
+        <div class="summary__card">
+          <div class="summary__label">Promedio PNA</div>
+          <div class="summary__value" id="avgPNA">—</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>Sim</th>
+              <th>Hora</th>
+              <th>Min</th>
+              <th>FH</th>
+              <th>FDH</th>
+              <th>λ</th>
+              <th>TLP</th>
+              <th>PA</th>
+              <th>NPC(t+1)</th>
+              <th>PNA</th>
+              <th>TME</th>
+              <th>TTVL</th>
+              <th>CMO</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+            <tr><td class="muted" colspan="13">Ejecuta una simulación para ver datos.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footnote">
+        Nota: λ se interpreta como la media de arribos por hora para el instante actual (igual que tu Python: λ = IPLP_base · FDH).
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>Hecho para modelado/simulación — Teleférico Bolivia (tema académico).</small>
+  </footer>
+
+  <script type="module" src="./src/js/main.js"></script>
+</body>
+</html>
