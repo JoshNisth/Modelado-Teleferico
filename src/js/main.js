@@ -2,7 +2,7 @@ const TF = window.TF;
 
 const { DEFAULTS, applyThemeForLine, parseFormConfig, validateConfig } = TF.sim.config;
 const { getOperationWindow, computeFdhValle, runSimulations } = TF.sim.engine;
-const { renderResultsTable, renderSummary, renderSimulationTabs, renderSimAverages, setStatus } = TF.ui.render;
+const { renderResultsTable, renderSummary, renderSimulationTabs, renderSimAverages, setRangeMode, setStatus } = TF.ui.render;
 const { getPreset } = TF.sim.scenarios;
 
 const form = document.getElementById('configForm');
@@ -27,6 +27,8 @@ function setFormValues(defaults) {
   document.getElementById('linea').value = defaults.linea;
   document.getElementById('mes').value = defaults.mes;
   document.getElementById('tipoDia').value = defaults.tipoDia;
+  const rangeEl = document.getElementById('rangoAnalisis');
+  if (rangeEl) rangeEl.value = 'todo';
   document.getElementById('ns').value = String(defaults.ns);
 
   document.getElementById('cc').value = String(defaults.cc);
@@ -129,6 +131,10 @@ form.addEventListener('change', (e) => {
   if (e.target?.id === 'mes') {
     applyPresetParams();
   }
+  if (e.target?.id === 'rangoAnalisis') {
+    const mode = String(e.target.value || 'todo');
+    if (typeof setRangeMode === 'function') setRangeMode(mode);
+  }
   if (e.target?.id === 'tipoDia' || e.target?.id === 'horasPico') {
     updateFixedFields();
   }
@@ -149,10 +155,11 @@ form.addEventListener('submit', (e) => {
 
     setStatus('Simulando…');
     const result = runSimulations(config);
-    renderSummary(result);
-    renderSimAverages(result);
+    const rangeMode = String(document.getElementById('rangoAnalisis')?.value || 'todo');
+    renderSummary(result, rangeMode);
+    renderSimAverages(result, rangeMode);
     renderSimulationTabs(result);
-    renderResultsTable(result, 1);
+    renderResultsTable(result, 1, rangeMode);
     setStatus(`Listo. Minutos simulados por corrida: ${result.minutesPerDay}.`);
   } catch (err) {
     console.error(err);
@@ -166,5 +173,6 @@ resetBtn.addEventListener('click', () => {
   setFormValues(DEFAULTS);
   applyPresetParams();
   updateFixedFields();
+  if (typeof setRangeMode === 'function') setRangeMode('todo');
   setStatus('Parámetros reseteados.');
 });
