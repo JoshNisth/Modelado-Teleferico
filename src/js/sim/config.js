@@ -22,7 +22,7 @@ const DEFAULTS = {
   ns: 1,
 
   cc: 10,
-  tap: 0.034,
+  tap: 0.041,
   tec: 0.2,
   trl: 14,
 
